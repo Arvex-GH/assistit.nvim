@@ -1,0 +1,57 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    name: Headless Neovim (${{ matrix.nvim_version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        nvim_version: ["v0.10.4", "stable"]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Neovim ${{ matrix.nvim_version }}
+        uses: rhysd/action-setup-vim@v1
+        with:
+          neovim: true
+          version: ${{ matrix.nvim_version }}
+
+      - name: Verify Neovim and Python 3
+        run: |
+          nvim --version | head -n 5
+          python3 --version
+          curl --version | head -n 1
+
+      - name: Run Lua syntax & global-leak audit
+        run: |
+          nvim --headless -u NONE --cmd "set rtp+=." -c 'lua
+            local files = vim.fn.glob("lua/**/*.lua", false, true)
+            vim.list_extend(files, vim.fn.glob("plugin/**/*.lua", false, true))
+            for _, f in ipairs(files) do
+              local fn, err = loadfile(f)
+              if not fn then error(err) end
+            end
+            local writes = {}
+            setmetatable(_G, { __newindex = function(t, k, v) writes[#writes + 1] = tostring(k); rawset(t, k, v) end })
+            for _, f in ipairs(files) do
+              local mod = f:match("^lua/(.+)%.lua$")
+              if mod then require((mod:gsub("/", "."):gsub("%.init$", ""))) end
+            end
+            if #writes > 0 then error("Global writes: " .. table.concat(writes, ", ")) end
+          ' -c "qa!"
+
+      - name: Verify Vimdoc help tags
+        run: |
+          nvim --headless -u NONE -c "helptags doc" -c "qa!"
+          rm -f doc/tags
+
+      - name: Run full headless test suite
+        run: nvim --headless -u NONE -l tests/run.lua

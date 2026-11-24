@@ -1,0 +1,202 @@
+*assistit.txt*   Ultra-lightweight local-first hybrid AI coding companion
+
+Author:  Arvex-GH & Contributors
+License: MIT
+Target:  Neovim >= 0.10.0
+
+==============================================================================
+CONTENTS                                                   *assistit-contents*
+
+  1. Philosophy & Hybrid Architecture ............. |assistit-architecture|
+  2. Installation & Quickstart .................... |assistit-quickstart|
+  3. Configuration & Hardware Profiles ............ |assistit-configuration|
+  4. Ghost-Text & Progressive Acceptance .......... |assistit-completion|
+  5. Commands Reference ........................... |assistit-commands|
+  6. Local Inference Providers & FIM Models ....... |assistit-providers|
+  7. Privacy & Security Guarantees ................ |assistit-privacy|
+  8. Healthcheck & Troubleshooting ................ |assistit-troubleshooting|
+
+==============================================================================
+1. PHILOSOPHY & HYBRID ARCHITECTURE                    *assistit-architecture*
+
+The fastest useful AI is the one that does not need to think about everything.
+
+`assistit.nvim` divides coding assistance into four specialized layers so old
+CPU-only laptops remain snappy and responsive:
+
+  Layer A — Deterministic Intelligence (`provider = "none"` capable):
+    Zero-latency (<0.2ms) Lua checks: structural block/doc stubs, offline
+    identifier continuation, cursor-aware bracket/quote autopairs, duplicate
+    and unused import detection, suspicious conditionals, security pattern
+    warnings, and safe whitespace/import cleanup.
+
+  Layer B — Language Intelligence:
+    Integrates natively with `vim.lsp` (code actions, formatting, diagnostics),
+    `vim.treesitter` (enclosing function/class scope, comment/string AST
+    awareness), and respects `pumvisible()`, `nvim-cmp`, and `blink.cmp`.
+
+  Layer C — Tiny Local AI (0.5B–1.5B quantized FIM models):
+    Asynchronous Fill-In-the-Middle (FIM) ghost-text completion, multi-line
+    block generation, error explanations, and diff-previewed code repairs via
+    `ollama`, `llama.cpp` (`llama-server`), or OpenAI-compatible local servers.
+
+  Layer D — Optional Advanced Local Model:
+    Users with stronger hardware can optionally route deeper tasks (`:AssistItFix`,
+    `:AssistItRefactor`, `:AssistItReview`, `:AssistItTest`) to a larger local
+    model while keeping inline ghost text on a tiny 0.5B/1.5B model.
+
+Note: `assistit.nvim` communicates with locally running inference servers via
+HTTP (`curl`). Personalization uses lightweight local statistics and never
+claims to retrain neural weights.
+
+==============================================================================
+2. INSTALLATION & QUICKSTART                             *assistit-quickstart*
+
+With `lazy.nvim`: >lua
+  {
+    "Arvex-GH/assistit.nvim",
+    event = { "InsertEnter", "CmdlineEnter" },
+    opts = {
+      profile = "ultra_light",
+      provider = "ollama",
+      model = "qwen2.5-coder:0.5b",
+    },
+  }
+<
+
+Verify your setup inside Neovim: >vim
+  :checkhealth assistit
+  :AssistItStatus
+<
+
+==============================================================================
+3. CONFIGURATION & HARDWARE PROFILES                  *assistit-configuration*
+
+Built-in hardware profiles (`profile = "..."`):
+  - `"ultra_light"` (default): Tuned for weak CPU-only laptops. Tight context
+    budget (1200 prefix / 400 suffix chars), conservative debounce (240ms),
+    96 max tokens, background project indexing off.
+  - `"balanced"`: For standard laptops. Larger context (2800 / 1000 chars),
+    streaming enabled, incremental project symbol index enabled.
+  - `"performance"`: For workstations/GPUs. 6000 / 2200 char context, 100ms
+    debounce, deep static & security checks.
+
+Example `setup()` configuration: >lua
+  require("assistit").setup({
+    enabled = true,
+    profile = "ultra_light",
+    provider = "ollama", -- "ollama" | "llamacpp" | "openai_compat" | "none"
+    model = "qwen2.5-coder:0.5b",
+    endpoint = "http://127.0.0.1:11434",
+    completion = {
+      enabled = true,
+      debounce_ms = 240,
+      max_lines = 12,
+      max_tokens = 96,
+      progressive_accept = true,
+    },
+    diagnostics = {
+      enabled = true,
+      ai_suggestions = true,
+      automatic_fixes = false,
+    },
+    personalization = {
+      enabled = true,
+      local_only = true,
+    },
+    privacy = {
+      local_only = true,
+      redact_secrets = true,
+    },
+  })
+<
+
+==============================================================================
+4. GHOST-TEXT & PROGRESSIVE ACCEPTANCE                   *assistit-completion*
+
+Default Insert-mode keymaps (active ONLY when ghost text is visible and no
+popup menu is open):
+  `<Tab>`             Accept full ghost-text suggestion
+  `<M-w>` / `<M-Tab>` Accept next word only, keeping remaining ghost text
+  `<M-l>`             Accept next line only, keeping remaining lines
+  `<Esc>`             Dismiss active ghost-text suggestion
+  `<C-]>`             Cycle / request an alternative suggestion
+  `<C-g><C-b>`        Explicitly request a larger multi-line block completion
+
+`<Plug>` mappings for custom keybinds (`completion.keymaps.enabled = false`):
+  `<Plug>(assistit-accept)`
+  `<Plug>(assistit-accept-word)`
+  `<Plug>(assistit-accept-line)`
+  `<Plug>(assistit-dismiss)`
+  `<Plug>(assistit-next)`
+  `<Plug>(assistit-complete-block)`
+
+Prefix-continuation slicing: if you keep typing characters that match the
+displayed ghost text, `assistit.nvim` advances the remaining ghost text in
+0ms without issuing a new HTTP request.
+
+==============================================================================
+5. COMMANDS REFERENCE                                      *assistit-commands*
+
+  *:AssistItEnable*        Enable assistit.nvim
+  *:AssistItDisable*       Disable assistit.nvim and clear ghost text
+  *:AssistItToggle*        Toggle plugin state
+  *:AssistItStatus*        Open floating status, privacy, & latency dashboard
+  *:AssistItComplete*      Manually request inline completion at cursor
+  *:AssistItCompleteBlock* Request a larger multi-line block completion
+  *:AssistItAccept*        Accept active ghost text or active diff proposal
+  *:AssistItAcceptWord*    Accept next word of active ghost text
+  *:AssistItAcceptLine*    Accept next line of active ghost text
+  *:AssistItDismiss*       Dismiss ghost text or close preview window
+  *:AssistItExplain*       Explain selected range or enclosing function
+  *:AssistItFix*           Inspect diagnostic (Deterministic -> LSP -> AI diff)
+  *:AssistItRefactor*      Propose refactored code in interactive diff preview
+  *:AssistItOptimize*      Propose allocation/performance optimizations
+  *:AssistItDoc*           Generate documentation/annotations with diff preview
+  *:AssistItTest*          Generate unit tests matching project conventions
+  *:AssistItReview*        Run hybrid deterministic + AI code/security review
+  *:AssistItGenerate*      Generate code from prompt or current-line comment
+  *:AssistItCleanup*       Remove duplicate imports & strip trailing spaces
+  *:AssistItIndex*         Build or refresh incremental project symbol index
+  *:AssistItProfile*       Switch hardware profile at runtime
+  *:AssistItClearCache*    Clear in-memory LRU completion cache
+  *:AssistItResetLearning* Delete local personalization statistics JSON
+  *:AssistIt*              Subcommand dispatcher (`:AssistIt <Tab>`)
+
+==============================================================================
+6. LOCAL INFERENCE PROVIDERS & FIM MODELS                 *assistit-providers*
+
+Supported `provider` values:
+  - `"ollama"`        Default `http://127.0.0.1:11434` (`/api/generate`, `/api/chat`)
+  - `"llamacpp"`      Default `http://127.0.0.1:8080` (`/infill`, `/completion`)
+  - `"openai_compat"` Default `http://127.0.0.1:1234` (`/v1/completions`, `/v1/chat/completions`)
+  - `"none"`          Offline Layer A deterministic mode (zero network calls)
+
+Supported `completion.fim_template` values (`"auto"` detects by model name):
+  `"qwen"`, `"deepseek"`, `"starcoder"`, `"codellama"`, `"codestral"`, `"prompt"`.
+
+==============================================================================
+7. PRIVACY & SECURITY GUARANTEES                            *assistit-privacy*
+
+  - Strictly local loopback (`127.0.0.1` / `localhost`) enforced by default.
+  - Zero telemetry, zero analytics, zero cloud accounts.
+  - Sensitive files (`.env*`, `*.pem`, `*.key`, `id_rsa*`, `credentials.json`)
+    are blocked from context extraction and project indexing.
+  - Detected API tokens, PEM blocks, JWTs, and URI passwords are redacted to
+    `<REDACTED_SECRET>` before prompt assembly.
+  - Request payloads are piped to `curl` over `stdin` (`--data-binary @-`) so
+    source code never appears in OS `ps` process listings.
+  - AI repairs are NEVER applied silently; every change requires explicit
+    approval in a unified diff preview and can be undone with `u`.
+
+==============================================================================
+8. HEALTHCHECK & TROUBLESHOOTING                    *assistit-troubleshooting*
+
+Run `:checkhealth assistit` to verify Neovim version, `curl` availability,
+privacy rules, and live connectivity to your local model server.
+
+Statusline integration: >lua
+  require("assistit").statusline()
+<
+
+ vim:tw=78:ts=8:ft=help:norl:
