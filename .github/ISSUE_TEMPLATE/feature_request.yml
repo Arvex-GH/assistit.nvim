@@ -1,0 +1,19 @@
+name: Feature Request
+description: Propose a lightweight improvement, provider, or deterministic check
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or workflow friction
+      description: What editing task feels slower or harder than it should?
+    validations:
+      required: true
+  - type: textarea
+    id: layer
+    attributes:
+      label: Which intelligence layer should handle this?
+      description: "Can this be solved deterministically (Layer A), via LSP/Tree-sitter (Layer B), or does it require neural inference (Layer C/D)?"
+    validations:
+      required: true
