@@ -17,7 +17,9 @@ M.TEMPLATES = {
       "<|fim_suffix|>",
       "<|fim_middle|>",
       "<|file_sep|>",
+      "<|file_separator|>",
       "<|im_end|>",
+      "<eos>",
     },
   },
 
@@ -118,14 +120,13 @@ function M.detect_template(model_name, configured_template)
     return configured_template
   end
   local m = (model_name or ""):lower()
-  if m:find("qwen", 1, true) or m:find("yi%-coder") then
+  if m:find("qwen", 1, true) or m:find("yi%-coder") or m:find("codegemma", 1, true) then
     return "qwen"
   elseif m:find("deepseek", 1, true) then
     return "deepseek"
   elseif
     m:find("starcoder", 1, true)
     or m:find("santacoder", 1, true)
-    or m:find("codegemma", 1, true)
     or m:find("granite%-code")
     or m:find("granite_code")
     or m:find("stable%-code")
@@ -187,7 +188,9 @@ function M.clean_completion(raw, ctx, max_lines)
     "<|fim_suffix|>",
     "<|fim_middle|>",
     "<|file_sep|>",
+    "<|file_separator|>",
     "<|im_end|>",
+    "<eos>",
     "<｜end▁of▁sentence｜>",
     "<｜fim▁begin｜>",
     "<｜fim▁hole｜>",

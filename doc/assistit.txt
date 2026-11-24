@@ -138,30 +138,36 @@ displayed ghost text, `assistit.nvim` advances the remaining ghost text in
 ==============================================================================
 5. COMMANDS REFERENCE                                      *assistit-commands*
 
-  *:AssistItEnable*        Enable assistit.nvim
-  *:AssistItDisable*       Disable assistit.nvim and clear ghost text
-  *:AssistItToggle*        Toggle plugin state
-  *:AssistItStatus*        Open floating status, privacy, & latency dashboard
-  *:AssistItComplete*      Manually request inline completion at cursor
-  *:AssistItCompleteBlock* Request a larger multi-line block completion
-  *:AssistItAccept*        Accept active ghost text or active diff proposal
-  *:AssistItAcceptWord*    Accept next word of active ghost text
-  *:AssistItAcceptLine*    Accept next line of active ghost text
-  *:AssistItDismiss*       Dismiss ghost text or close preview window
-  *:AssistItExplain*       Explain selected range or enclosing function
-  *:AssistItFix*           Inspect diagnostic (Deterministic -> LSP -> AI diff)
-  *:AssistItRefactor*      Propose refactored code in interactive diff preview
-  *:AssistItOptimize*      Propose allocation/performance optimizations
-  *:AssistItDoc*           Generate documentation/annotations with diff preview
-  *:AssistItTest*          Generate unit tests matching project conventions
-  *:AssistItReview*        Run hybrid deterministic + AI code/security review
-  *:AssistItGenerate*      Generate code from prompt or current-line comment
-  *:AssistItCleanup*       Remove duplicate imports & strip trailing spaces
-  *:AssistItIndex*         Build or refresh incremental project symbol index
-  *:AssistItProfile*       Switch hardware profile at runtime
-  *:AssistItClearCache*    Clear in-memory LRU completion cache
-  *:AssistItResetLearning* Delete local personalization statistics JSON
-  *:AssistIt*              Subcommand dispatcher (`:AssistIt <Tab>`)
+All commands use short `:Ai*` names and support lowercase `:ai*` command-line
+abbreviations when `short_commands = true` (default). Full `:AssistIt*` names
+remain available as aliases.
+
+  *:Ai*   *:AssistIt*              Unified dispatcher (`:ai s`, `:ai p u`)
+  *:Ais*  *:AssistItStatus*        Open status, privacy, & latency dashboard
+  *:Aip*  *:AssistItProfile*       Switch profile (`u` | `b` | `p`)
+  *:Aim*  *:AssistItModel*         Switch local model (`1`-`10`, tag, `none`)
+  *:Ail*  *:AssistItLatency*       Show measured latency & cache summary
+  *:Aif*  *:AssistItFix*           Inspect diagnostic & propose diff repair
+  *:Aie*  *:AssistItExplain*       Explain selected range or enclosing scope
+  *:Air*  *:AssistItRefactor*      Propose refactored code in diff preview
+  *:Aio*  *:AssistItOptimize*      Propose allocation/performance improvements
+  *:Aid*  *:AssistItDoc*           Generate docstrings/types with diff preview
+  *:Ait*  *:AssistItTest*          Generate unit tests matching conventions
+  *:Aiv*  *:AssistItReview*        Run hybrid deterministic + AI code review
+  *:Aig*  *:AssistItGenerate*      Generate code from prompt or comment line
+  *:Aic*  *:AssistItCleanup*       Remove duplicate imports & trailing spaces
+  *:Aii*  *:AssistItIndex*         Build or refresh incremental symbol index
+  *:Aicp* *:AssistItComplete*      Trigger inline completion at cursor
+  *:Aicb* *:AssistItCompleteBlock* Request multi-line block completion
+  *:Aia*  *:AssistItAccept*        Accept active ghost text or diff proposal
+  *:Aiaw* *:AssistItAcceptWord*    Accept next word of active ghost text
+  *:Aial* *:AssistItAcceptLine*    Accept next line of active ghost text
+  *:Aix*  *:AssistItDismiss*       Dismiss ghost text or close preview window
+  *:Aion* *:AssistItEnable*        Enable assistit.nvim
+  *:Aioff* *:AssistItDisable*      Disable assistit.nvim and clear ghost text
+  *:Aitg* *:AssistItToggle*        Toggle plugin state
+  *:Aicc* *:AssistItClearCache*    Clear in-memory LRU completion cache
+  *:Airl* *:AssistItResetLearning* Delete local personalization stats JSON
 
 ==============================================================================
 6. LOCAL INFERENCE PROVIDERS & FIM MODELS                 *assistit-providers*

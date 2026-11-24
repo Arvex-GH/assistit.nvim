@@ -123,6 +123,8 @@ function M.format_lines(info)
     info.personalization.avg_accepted_lines
   )
   lines[#lines + 1] = "  Stored locally:   " .. info.personalization.storage_path
+  lines[#lines + 1] = ""
+  lines[#lines + 1] = "Quick Commands: :aip <u|b|p> · :aim <1-10> · :aif · :aie · :aig · :aic"
 
   return lines
 end

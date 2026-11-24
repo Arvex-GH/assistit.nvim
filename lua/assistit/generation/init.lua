@@ -51,7 +51,7 @@ end
 local function run_model_task(spec, on_result)
   local cfg = require("assistit.config").get()
   if not cfg.enabled then
-    ui.notify("assistit.nvim is currently disabled (:AssistItEnable).", vim.log.levels.WARN, true)
+    ui.notify("assistit.nvim is currently disabled (:aion / :Aion).", vim.log.levels.WARN, true)
     return
   end
 
@@ -340,7 +340,7 @@ function M.generate(instruction)
   end
 
   if not instruction or util.trim(instruction) == "" then
-    ui.notify("Provide an instruction (`:AssistItGenerate <prompt>`) or place cursor on a comment line.", vim.log.levels.WARN, true)
+    ui.notify("Provide an instruction (`:aig <prompt>` / `:Aig <prompt>`) or place cursor on a comment line.", vim.log.levels.WARN, true)
     return
   end
 

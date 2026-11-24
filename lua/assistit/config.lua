@@ -22,6 +22,20 @@ M.PROVIDER_DEFAULTS = {
   },
 }
 
+---10 curated local coding models matching `setup.sh` and `setup.bat`.
+M.RECOMMENDED_MODELS = {
+  { id = 1, model = "qwen2.5-coder:0.5b", profile = "ultra_light", size = "~400 MB", ram = "~1 GB", desc = "Ultra-light CPU champion (4-8 GB laptops)" },
+  { id = 2, model = "deepseek-coder:1.3b", profile = "ultra_light", size = "~780 MB", ram = "~2 GB", desc = "Fast multi-language FIM on CPU laptops" },
+  { id = 3, model = "yi-coder:1.5b", profile = "balanced", size = "~870 MB", ram = "~2 GB", desc = "Compact 128K-context all-rounder" },
+  { id = 4, model = "qwen2.5-coder:1.5b", profile = "balanced", size = "~990 MB", ram = "~2 GB", desc = "Everyday laptop sweet spot (8 GB+ RAM)" },
+  { id = 5, model = "codegemma:2b", profile = "balanced", size = "~1.6 GB", ram = "~3 GB", desc = "Google fast FIM completion specialist" },
+  { id = 6, model = "starcoder2:3b", profile = "balanced", size = "~1.7 GB", ram = "~4 GB", desc = "BigCode 600+ languages FIM model" },
+  { id = 7, model = "qwen2.5-coder:3b", profile = "balanced", size = "~1.9 GB", ram = "~4 GB", desc = "Strong mid-size coder (8-16 GB RAM)" },
+  { id = 8, model = "deepseek-coder:6.7b", profile = "performance", size = "~3.8 GB", ram = "~6 GB", desc = "Desktop / GPU high-accuracy coder" },
+  { id = 9, model = "codellama:7b", profile = "performance", size = "~3.8 GB", ram = "~6 GB", desc = "Meta CodeLlama 7B FIM classic" },
+  { id = 10, model = "qwen2.5-coder:7b", profile = "performance", size = "~4.7 GB", ram = "~8 GB", desc = "Workstation / GPU flagship coder" },
+}
+
 ---Hardware profiles tuned for weak laptops up to workstations.
 M.PROFILES = {
   ultra_light = {
@@ -121,6 +135,7 @@ M.PROFILES = {
 ---Base default configuration before profile and user overrides.
 M.DEFAULTS = {
   enabled = true,
+  short_commands = true,
   profile = "ultra_light",
   custom_profiles = {},
 
@@ -471,20 +486,71 @@ function M.setup(user_opts)
   return true, M.current, msgs
 end
 
+local PROFILE_ALIASES = {
+  u = "ultra_light",
+  ultra = "ultra_light",
+  light = "ultra_light",
+  b = "balanced",
+  bal = "balanced",
+  p = "performance",
+  perf = "performance",
+}
+
 ---Switch active hardware profile at runtime while preserving explicit provider/model settings.
 ---@param profile_name string
 ---@return boolean ok
 ---@return string message
 function M.set_profile(profile_name)
+  local raw = util.trim(profile_name or "")
+  local resolved = PROFILE_ALIASES[raw:lower()] or raw
   local custom = M.current.custom_profiles or {}
-  local profile_layer = custom[profile_name] or M.PROFILES[profile_name]
+  local profile_layer = custom[resolved] or M.PROFILES[resolved]
   if not profile_layer then
     return false,
-      string.format("Unknown profile %q. Available: ultra_light, balanced, performance.", tostring(profile_name))
+      string.format("Unknown profile %q. Available: ultra_light (u), balanced (b), performance (p).", tostring(raw))
   end
   M.current = vim.tbl_deep_extend("force", M.current, vim.deepcopy(profile_layer))
-  M.current.profile = profile_name
-  return true, string.format("Switched profile to '%s'.", profile_name)
+  M.current.profile = resolved
+  return true, string.format("Switched profile to '%s'.", resolved)
+end
+
+---Switch active local model (by tag, 1-10 curated index, or 'none'/'offline').
+---@param model_arg string
+---@return boolean ok
+---@return string message
+function M.set_model(model_arg)
+  local raw = util.trim(model_arg or "")
+  if raw == "" then
+    return false, "Specify a model tag, number (1-10), or 'none'."
+  end
+  local lower = raw:lower()
+  if lower == "0" or lower == "none" or lower == "offline" then
+    M.current.provider = "none"
+    M.current.model = M.PROVIDER_DEFAULTS.none.model
+    M.current.endpoint = ""
+    return true, "Switched to offline deterministic mode (provider = 'none')."
+  end
+
+  local idx = tonumber(raw)
+  local chosen_model = raw
+  local suggested_profile = nil
+  if idx and M.RECOMMENDED_MODELS[idx] then
+    chosen_model = M.RECOMMENDED_MODELS[idx].model
+    suggested_profile = M.RECOMMENDED_MODELS[idx].profile
+  end
+
+  if M.current.provider == "none" then
+    M.current.provider = "ollama"
+    if not M.current.endpoint or M.current.endpoint == "" then
+      M.current.endpoint = M.PROVIDER_DEFAULTS.ollama.endpoint
+    end
+  end
+  M.current.model = chosen_model
+  if suggested_profile then
+    M.set_profile(suggested_profile)
+    return true, string.format("Switched model to '%s' (profile: %s).", chosen_model, suggested_profile)
+  end
+  return true, string.format("Switched model to '%s'.", chosen_model)
 end
 
 ---Return current configuration table.
