@@ -36,7 +36,7 @@ function M.setup(opts)
   end
 
   ui.setup_highlights()
-  commands.setup()
+  commands.setup(cfg)
   personalization.load(cfg)
 
   if M._lifecycle_group then
@@ -231,6 +231,42 @@ function M.set_profile(profile_name)
   end
   ui.notify(msg, vim.log.levels.INFO, true)
   return true
+end
+
+function M.set_model(model_arg)
+  ensure_initialized()
+  local ok, msg = config.set_model(vim.trim(model_arg or ""))
+  if not ok then
+    ui.notify(msg, vim.log.levels.ERROR, true)
+    return false
+  end
+  cache.global:clear()
+  local cfg = config.get()
+  if cfg.enabled then
+    completion.setup(cfg)
+    diagnostics.setup(cfg)
+  end
+  ui.notify(msg, vim.log.levels.INFO, true)
+  return true
+end
+
+function M.latency()
+  ensure_initialized()
+  local metrics = require("assistit.metrics")
+  local snap = metrics.snapshot()
+  ui.notify(
+    string.format(
+      "Latency — plugin: %.2fms | context: %.2fms | HTTP avg: %.1fms (last: %.1fms, n=%d) | cache hit: %.1f%%",
+      snap.plugin_overhead_ms.avg,
+      snap.context_extract_ms.avg,
+      snap.http_latency_ms.avg,
+      snap.http_latency_ms.last,
+      snap.http_latency_ms.samples,
+      snap.cache_hit_ratio * 100
+    ),
+    vim.log.levels.INFO,
+    true
+  )
 end
 
 function M.clear_cache()

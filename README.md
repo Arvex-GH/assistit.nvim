@@ -84,7 +84,46 @@ Most AI plugins send entire buffers to massive models on every pause. On CPU-onl
 
 ---
 
-## Installation
+## One-Click Setup (Linux & Windows CMD)
+
+Clone the repository and run the interactive one-click installer — it checks/installs Neovim `>= 0.10` and Ollama, lets you **choose 1 of 10 curated local coding models** (or `0` for zero-download offline mode), pulls your chosen model, and configures Neovim safely without overwriting your existing `init.lua`:
+
+**Linux (`setup.sh`):**
+```bash
+git clone https://github.com/Arvex-GH/assistit.nvim.git
+cd assistit.nvim
+./setup.sh
+```
+
+**Windows Command Prompt / Explorer (`setup.bat`):**
+```bat
+git clone https://github.com/Arvex-GH/assistit.nvim.git
+cd assistit.nvim
+setup.bat
+```
+*(Or simply double-click `setup.bat` in Windows File Explorer.)*
+
+### The 10 Built-In Local Model Choices
+
+| # | Ollama Model Tag | Download | RAM | Auto Profile | Best For |
+| :-: | :--- | :---: | :---: | :---: | :--- |
+| `1` | `qwen2.5-coder:0.5b` | ~400 MB | ~1 GB | `ultra_light` | Old CPU-only laptops (4–8 GB RAM) |
+| `2` | `deepseek-coder:1.3b` | ~780 MB | ~2 GB | `ultra_light` | Fast multi-language FIM on CPU laptops |
+| `3` | `yi-coder:1.5b` | ~870 MB | ~2 GB | `balanced` | Compact 128K-context all-rounder |
+| `4` | `qwen2.5-coder:1.5b` | ~990 MB | ~2 GB | `balanced` | Everyday laptop sweet spot (8 GB+ RAM) |
+| `5` | `codegemma:2b` | ~1.6 GB | ~3 GB | `balanced` | Google fast FIM completion specialist |
+| `6` | `starcoder2:3b` | ~1.7 GB | ~4 GB | `balanced` | BigCode 600+ languages FIM model |
+| `7` | `qwen2.5-coder:3b` | ~1.9 GB | ~4 GB | `balanced` | Strong mid-size coder (8–16 GB RAM) |
+| `8` | `deepseek-coder:6.7b` | ~3.8 GB | ~6 GB | `performance` | Desktop / GPU high-accuracy coder |
+| `9` | `codellama:7b` | ~3.8 GB | ~6 GB | `performance` | Meta CodeLlama 7B FIM classic |
+| `10` | `qwen2.5-coder:7b` | ~4.7 GB | ~8 GB | `performance` | Workstation / GPU flagship coder |
+| `0` | *Offline Mode (`none`)* | 0 MB | 0 MB | `ultra_light` | Layer A deterministic + LSP only |
+
+You can switch between installed models anytime inside Neovim with `:aim 4` or `:aim qwen2.5-coder:3b`!
+
+---
+
+## Manual Plugin Manager Installation
 
 ### `lazy.nvim`
 
@@ -253,28 +292,30 @@ require("assistit").statusline()
 
 ## Commands & Controls
 
-All capabilities are available both as dedicated commands and via `:AssistIt <subcommand>` (with `<Tab>` completion):
+All commands use crisp `:Ai*` names — and when `short_commands = true` (default), you can type them in **pure lowercase** right at the `:` prompt (`:aip`, `:aim`, `:aif`, `:aie`, etc.) without holding Shift! Full `:AssistIt*` names remain available as backwards-compatible aliases.
 
-| Command | Description |
-| :--- | :--- |
-| `:AssistItEnable` / `:AssistItDisable` / `:AssistItToggle` | Enable, disable, or toggle `assistit.nvim` |
-| `:AssistItStatus` | Open live connection, privacy, cache, & measured latency dashboard |
-| `:AssistItComplete` | Trigger inline ghost-text completion at cursor |
-| `:AssistItCompleteBlock` | Request a larger multi-line block / function completion |
-| `:AssistItAccept` / `AcceptWord` / `AcceptLine` / `Dismiss` | Programmatic/command acceptance & dismissal controls |
-| `:[range]AssistItExplain` | Concisely explain selected range or enclosing function |
-| `:[range]AssistItFix` | Inspect diagnostic (Deterministic -> LSP Code Action -> reviewable AI diff) |
-| `:[range]AssistItRefactor` | Propose refactored code in interactive diff preview |
-| `:[range]AssistItOptimize` | Propose performance & memory-allocation improvements |
-| `:[range]AssistItDoc` | Generate idiomatic docstrings/type annotations with diff preview |
-| `:[range]AssistItTest` | Generate unit tests tailored to detected project conventions |
-| `:[range]AssistItReview` | Run hybrid deterministic static + local AI code & security review |
-| `:AssistItGenerate [instruction]` | Generate code block from prompt or current-line comment |
-| `:AssistItCleanup` | Deterministically remove duplicate imports & trailing whitespace |
-| `:AssistItIndex` | Build or refresh incremental `.gitignore`-aware project symbol index |
-| `:AssistItProfile <name>` | Switch hardware profile (`ultra_light`, `balanced`, `performance`) live |
-| `:AssistItClearCache` | Clear in-memory LRU completion cache |
-| `:AssistItResetLearning` | Delete local personalization statistics JSON |
+| Short Command | Lowercase | Full Alias | Description |
+| :--- | :--- | :--- | :--- |
+| `:Ai [sub]` | `:ai` | `:AssistIt` | Unified command dispatcher (`:ai s`, `:ai p u`, `:ai m 4`, `:ai f`) |
+| `:Ais` | `:ais` | `:AssistItStatus` | Open live connection, privacy, cache, & measured latency dashboard |
+| `:Aip <u\|b\|p>` | `:aip` | `:AssistItProfile` | Switch hardware profile (`ultra_light`/`u`, `balanced`/`b`, `performance`/`p`) |
+| `:Aim <1-10\|tag>` | `:aim` | `:AssistItModel` | Switch active local model (`1`–`10`, Ollama tag, or `none`) |
+| `:Ail` | `:ail` | `:AssistItLatency` | Show honest latency & cache hit summary |
+| `:[range]Aif` | `:aif` | `:AssistItFix` | Inspect diagnostic & propose reviewable diff fix (LSP -> AI) |
+| `:[range]Aie` | `:aie` | `:AssistItExplain` | Concisely explain selected range or enclosing function |
+| `:[range]Air` | `:air` | `:AssistItRefactor` | Propose refactored code in interactive diff preview |
+| `:[range]Aio` | `:aio` | `:AssistItOptimize` | Propose performance & memory-allocation improvements |
+| `:[range]Aid` | `:aid` | `:AssistItDoc` | Generate idiomatic docstrings/type annotations with diff preview |
+| `:[range]Ait` | `:ait` | `:AssistItTest` | Generate unit tests tailored to detected project conventions |
+| `:[range]Aiv` | `:aiv` | `:AssistItReview` | Run hybrid deterministic static + local AI code & security review |
+| `:Aig [prompt]` | `:aig` | `:AssistItGenerate` | Generate code block from prompt or current-line comment |
+| `:Aic` | `:aic` | `:AssistItCleanup` | Deterministically remove duplicate imports & trailing whitespace |
+| `:Aii` | `:aii` | `:AssistItIndex` | Build or refresh incremental `.gitignore`-aware project symbol index |
+| `:Aicp` / `:Aicb` | `:aicp` / `:aicb` | `:AssistItComplete[Block]` | Trigger inline ghost-text or multi-line block completion |
+| `:Aia` / `:Aiaw` / `:Aial` | `:aia` / `:aiaw` / `:aial` | `:AssistItAccept[Word\|Line]` | Accept full suggestion, next word, or next line |
+| `:Aix` | `:aix` | `:AssistItDismiss` | Dismiss active ghost-text suggestion or preview window |
+| `:Aion` / `:Aioff` / `:Aitg` | `:aion` / `:aioff` / `:aitg` | `:AssistItEnable\|Disable\|Toggle` | Enable, disable, or toggle `assistit.nvim` |
+| `:Aicc` / `:Airl` | `:aicc` / `:airl` | `:AssistItClearCache` / `ResetLearning` | Clear LRU cache or reset local personalization stats |
 
 ---
 

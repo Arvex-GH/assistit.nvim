@@ -177,7 +177,7 @@ function M.fix(opts)
   opts = opts or {}
   local cfg = require("assistit.config").get()
   if not cfg.enabled then
-    ui.notify("assistit.nvim is disabled (:AssistItEnable).", vim.log.levels.WARN, true)
+    ui.notify("assistit.nvim is disabled (:aion / :Aion).", vim.log.levels.WARN, true)
     return
   end
 
